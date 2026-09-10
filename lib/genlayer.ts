@@ -8,7 +8,7 @@ import {
   TransactionStatus,
 } from "genlayer-js/types";
 
-const CONTRACT_ADDRESS = (
+export const CONTRACT_ADDRESS = (
   process.env.NEXT_PUBLIC_FULSETA_CONTRACT ||
   "0x086B0f5142970aC912344fb73147653f8Aca4Df0"
 ) as `0x${string}`;
