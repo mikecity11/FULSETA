@@ -52,7 +52,7 @@ async function write(functionName: string, args: unknown[], value?: bigint) {
     },
   });
 
-  const receipt = await client.waitForFinalization({ hash });
+ const receipt = await client.waitForFinalization({ hash });
 
 if (receipt.txExecutionResultName !== "FINISHED_WITH_RETURN") {
   throw new Error(
@@ -61,7 +61,7 @@ if (receipt.txExecutionResultName !== "FINISHED_WITH_RETURN") {
 }
 
 return { hash, receipt };
-
+}
 export const createAgreement = (dealId: string, worker: string, task: string, requirements: string, deadline: string) =>
   write("create_agreement", [dealId, worker, task, requirements, deadline]);
 
