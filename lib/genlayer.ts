@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient, isSuccessful } from "genlayer-js";
+import { createClient } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
 import { TransactionHashVariant } from "genlayer-js/types";
 
@@ -53,11 +53,14 @@ async function write(functionName: string, args: unknown[], value?: bigint) {
   });
 
   const receipt = await client.waitForFinalization({ hash });
-  if (!isSuccessful(receipt)) {
-    throw new Error(`GenLayer transaction failed: ${receipt.statusName || "unknown status"}`);
-  }
-  return { hash, receipt };
+
+if (receipt.txExecutionResultName !== "FINISHED_WITH_RETURN") {
+  throw new Error(
+    `GenLayer transaction failed: ${receipt.statusName || "unknown status"}`
+  );
 }
+
+return { hash, receipt };
 
 export const createAgreement = (dealId: string, worker: string, task: string, requirements: string, deadline: string) =>
   write("create_agreement", [dealId, worker, task, requirements, deadline]);
