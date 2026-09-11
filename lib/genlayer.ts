@@ -59,8 +59,8 @@ export async function connectWallet() {
  * Read-only GenLayer client.
  */
 export function getReadClient() {
- return createClient({
-  chain: bradbury,
+return createClient({
+  chain: studionet,
 });
 }
 
