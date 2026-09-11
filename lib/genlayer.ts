@@ -2,7 +2,7 @@
 "use client";
 
 import { createClient } from "genlayer-js";
-import { bradbury } from "genlayer-js/chains";
+import { studionet } from "genlayer-js/chains";
 import {
   TransactionHashVariant,
   TransactionStatus,
@@ -42,12 +42,12 @@ export async function connectWallet() {
   }
 
   const client = createClient({
-   chain: bradbury,
+   chain: studionet,
     account,
     provider: window.ethereum,
   });
 
-  await client.connect("bradbury");;
+  await client.connect("studionet");
 
   return {
     client,
