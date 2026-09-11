@@ -21,11 +21,8 @@ declare global {
     ethereum?: any;
   }
 }
-
 /**
- /**
  * Connect user's browser wallet to GenLayer Bradbury Testnet.
- */.
  */
 export async function connectWallet() {
   if (typeof window === "undefined" || !window.ethereum) {
