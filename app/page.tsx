@@ -45,14 +45,20 @@ export default function Home() {
   }
 
   async function onConnect() {
-    if (!CONTRACT_ADDRESS && DEMO_MODE) {
-      setWallet("0x8B71D3e52D77cAA1c0a9Ff31A23eDDAf4e1C9912");
-      setToast({kind:"ok", text:"Demo wallet connected. Add the contract address to enable real GenLayer writes."});
-      return;
-    }
-    const result = await run("connect", connectWallet, "Wallet connected to GenLayer Bradbury Testnet."
-    if (result?.account) setWallet(result.account);
+  if (!CONTRACT_ADDRESS && DEMO_MODE) {
+    setWallet("0x8713b5d277CA1c0eA9f31A23DD4f1eE5");
+    setToast({ kind: "ok", text: "Demo wallet connected. Add the contract address to enable real GenLayer writes." });
+    return;
   }
+
+  const result = await run(
+    "connect",
+    connectWallet,
+    "Wallet connected to GenLayer Bradbury Testnet."
+  );
+
+  if (result?.account) setWallet(result.account);
+}
 
   async function demoCreate() {
     if (!worker) return setToast({kind:"err", text:"Add the worker wallet address."});
