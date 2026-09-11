@@ -87,10 +87,10 @@ async function write(
   const hash = await client.writeContract(call);
 
   const receipt = await client.waitForTransactionReceipt({
-    hash,
-    status: TransactionStatus.FINALIZED,
-  });
-
+  hash,
+  status: TransactionStatus.ACCEPTED,
+});
+    
   if (receipt.txExecutionResultName !== "FINISHED_WITH_RETURN") {
     throw new Error(
       `GenLayer transaction failed: ${
