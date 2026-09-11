@@ -2,7 +2,7 @@
 "use client";
 
 import { createClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
+import { bradbury } from "genlayer-js/chains";
 import {
   TransactionHashVariant,
   TransactionStatus,
@@ -23,7 +23,9 @@ declare global {
 }
 
 /**
- * Connect user's browser wallet to GenLayer Studionet.
+ /**
+ * Connect user's browser wallet to GenLayer Bradbury Testnet.
+ */.
  */
 export async function connectWallet() {
   if (typeof window === "undefined" || !window.ethereum) {
@@ -43,12 +45,12 @@ export async function connectWallet() {
   }
 
   const client = createClient({
-    chain: studionet,
+   chain: bradbury,
     account,
     provider: window.ethereum,
   });
 
-  await client.connect("studionet");
+  await client.connect("bradbury");;
 
   return {
     client,
@@ -60,9 +62,9 @@ export async function connectWallet() {
  * Read-only GenLayer client.
  */
 export function getReadClient() {
-  return createClient({
-    chain: studionet,
-  });
+ return createClient({
+  chain: bradbury,
+});
 }
 
 /**
