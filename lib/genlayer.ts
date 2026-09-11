@@ -187,16 +187,45 @@ export const refundFailed = (
 /**
  * Read an agreement from the Intelligent Contract.
  */
-export async function readAgreement(
-  dealId: string
-) {
+export async function readAgreement(dealId: string) {
   const client = getReadClient();
 
-  return client.readContract({
-    address: CONTRACT_ADDRESS,
-    functionName: "get_agreement",
-    args: [dealId],
-    transactionHashVariant:
-      TransactionHashVariant.LATEST_FINAL,
-  });
+  const read = (functionName: string) =>
+    client.readContract({
+      address: CONTRACT_ADDRESS,
+      functionName,
+      args: [dealId],
+      transactionHashVariant:
+        TransactionHashVariant.LATEST_NONFINAL,
+    });
+
+  const [
+    status,
+    task,
+    requirements,
+    evidenceUrl,
+    verdict,
+    reasoning,
+    amount,
+  ] = await Promise.all([
+    read("get_status"),
+    read("get_task"),
+    read("get_requirements"),
+    read("get_evidence"),
+    read("get_verdict"),
+    read("get_reasoning"),
+    read("get_amount"),
+  ]);
+
+  return {
+    exists: Boolean(status),
+    deal_id: dealId,
+    task,
+    requirements,
+    evidence_url: evidenceUrl,
+    status,
+    verdict,
+    reasoning,
+    amount_wei: String(amount),
+  };
 }
