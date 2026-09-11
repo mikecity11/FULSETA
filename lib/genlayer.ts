@@ -2,7 +2,7 @@
 "use client";
 
 import { createClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
+import { localnet } from "genlayer-js/chains";
 import {
   TransactionHashVariant,
   TransactionStatus,
