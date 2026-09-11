@@ -31,7 +31,7 @@ export default function Home() {
   const [lookupId, setLookupId] = useState("creator-001");
   const [agreement, setAgreement] = useState<any>(null);
 
-  const networkLabel = CONTRACT_ADDRESS ? "GenLayer Studionet" : "Demo Mode";
+  const networkLabel = CONTRACT_ADDRESS ? "GenLayer Bradbury Testnet" : "Demo Mode";
 
   async function run(label: string, fn: () => Promise<any>, success: string) {
     try {
@@ -50,7 +50,7 @@ export default function Home() {
       setToast({kind:"ok", text:"Demo wallet connected. Add the contract address to enable real GenLayer writes."});
       return;
     }
-    const result = await run("connect", connectWallet, "Wallet connected to GenLayer Studionet.");
+    const result = await run("connect", connectWallet, "Wallet connected to GenLayer Bradbury Testnet."
     if (result?.account) setWallet(result.account);
   }
 
