@@ -58,9 +58,10 @@ export async function connectWallet() {
 /**
  * Read-only GenLayer client.
  */
-return createClient({
-  chain: bradbury,
-});
+export function getReadClient() {
+  return createClient({
+    chain: bradbury,
+  });
 }
 
 /**
