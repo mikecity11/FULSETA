@@ -2,7 +2,7 @@
 "use client";
 
 import { createClient } from "genlayer-js";
-import { bradbury } from "genlayer-js/chains";
+import { localnet } from "genlayer-js/chains";
 import {
   TransactionHashVariant,
   TransactionStatus,
@@ -42,12 +42,12 @@ export async function connectWallet() {
   }
 
   const client = createClient({
-   chain: bradbury,
+   chain: localnet,
     account,
     provider: window.ethereum,
   });
 
-  await client.connect("bradbury");
+  await client.connect("localnet");
 
   return {
     client,
@@ -60,7 +60,7 @@ export async function connectWallet() {
  */
 export function getReadClient() {
   return createClient({
-    chain: bradbury,
+  chain: localnet,
   });
 }
 
