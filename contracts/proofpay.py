@@ -90,16 +90,103 @@ class ProofPay(gl.Contract):
         evidence_url = self.evidence_urls[deal_id]
 
         def judge():
-            page = gl.nondet.web.get(evidence_url)
-            body = page.body.decode("utf-8", errors="ignore")
-            # Limit prompt payload while preserving enough evidence for a hackathon MVP.
-            body = body[:22000]
+    page = gl.nondet.web.get(evidence_url)
+    html = page.body.decode("utf-8", errors="ignore")
 
-            prompt = f"""
-You are ProofPay, an impartial escrow judge.
+    evidence_content = html[:22000]
+    video_metadata = ""
+    transcript = ""
+
+    # Extra handling for YouTube evidence.
+    if "youtube.com" in evidence_url or "youtu.be" in evidence_url:
+        def snippet(marker: str, before: int = 1500, after: int = 12000) -> str:
+            pos = html.find(marker)
+            if pos == -1:
+                return ""
+            start = max(0, pos - before)
+            end = min(len(html), pos + after)
+            return html[start:end]
+
+        youtube_data = (
+            snippet('"videoDetails"')
+            + "\n"
+            + snippet('"captionTracks"')
+            + "\n"
+            + snippet('"ownerChannelName"')
+        )
+
+        metadata_prompt = f"""
+You are extracting verifiable metadata from YouTube page source.
+
+Extract the following fields from the supplied HTML snippets:
+
+- title
+- channel_name
+- length_seconds
+- caption_url
+
+For caption_url, use the exact baseUrl of the first available caption
+track. Decode escaped separators such as \\u0026 into &.
+
+If a field cannot be found, return an empty string.
+
+Return ONLY valid JSON:
+
+{{
+  "title": "",
+  "channel_name": "",
+  "length_seconds": "",
+  "caption_url": ""
+}}
+
+YOUTUBE HTML:
+{youtube_data[:30000]}
+"""
+
+        metadata_raw = gl.nondet.exec_prompt(metadata_prompt).strip()
+
+        try:
+            metadata = json.loads(metadata_raw)
+        except Exception:
+            metadata = {}
+
+        title = str(metadata.get("title", ""))
+        channel_name = str(metadata.get("channel_name", ""))
+        length_seconds = str(metadata.get("length_seconds", ""))
+        caption_url = str(metadata.get("caption_url", ""))
+
+        video_metadata = f"""
+YouTube title: {title}
+YouTube channel: {channel_name}
+Video length seconds: {length_seconds}
+"""
+
+        if caption_url.startswith("https://"):
+            try:
+                captions_page = gl.nondet.web.get(caption_url)
+                transcript = captions_page.body.decode(
+                    "utf-8",
+                    errors="ignore"
+                )[:50000]
+            except Exception:
+                transcript = ""
+
+        evidence_content = f"""
+{video_metadata}
+
+YOUTUBE CAPTIONS / TRANSCRIPT:
+{transcript}
+
+YOUTUBE PAGE SOURCE EXCERPT:
+{youtube_data[:12000]}
+"""
+
+    prompt = f"""
+You are FULSETA, an impartial escrow judge.
 
 Determine whether the submitted public evidence satisfies the agreement.
-Judge only what can be supported by the evidence. Do not invent facts.
+
+Judge ONLY facts supported by the evidence. Do not invent facts.
 
 TASK:
 {task}
@@ -114,26 +201,47 @@ EVIDENCE URL:
 {evidence_url}
 
 EVIDENCE CONTENT:
-{body}
+{evidence_content}
+
+When the evidence is a YouTube video:
+- use the channel metadata to verify the publishing channel;
+- use length_seconds to verify duration requirements;
+- use the captions/transcript to verify spoken requirements;
+- if captions or another required piece of evidence is unavailable,
+  do not assume it happened.
 
 Return ONLY valid JSON:
+
 {{
   "verdict": "PASS" or "FAIL",
   "reasoning": "A concise explanation tied directly to the requirements."
 }}
 
 A PASS requires all material requirements to be satisfied.
-If the page is inaccessible, irrelevant, or lacks enough proof, return FAIL.
+If the evidence is inaccessible or lacks enough proof, return FAIL.
 """
-            raw = gl.nondet.exec_prompt(prompt).strip()
-            data = json.loads(raw)
-            verdict = str(data.get("verdict", "")).upper()
-            if verdict not in ["PASS", "FAIL"]:
-                verdict = "FAIL"
-            return {
-                "verdict": verdict,
-                "reasoning": str(data.get("reasoning", "No reasoning returned"))[:1200],
-            }
+
+    raw = gl.nondet.exec_prompt(prompt).strip()
+
+    try:
+        data = json.loads(raw)
+    except Exception:
+        data = {
+            "verdict": "FAIL",
+            "reasoning": "The validator could not parse the evidence analysis."
+        }
+
+    verdict = str(data.get("verdict", "")).upper()
+
+    if verdict not in ["PASS", "FAIL"]:
+        verdict = "FAIL"
+
+    return {
+        "verdict": verdict,
+        "reasoning": str(
+            data.get("reasoning", "No reasoning returned")
+        )[:1200],
+    }
 
         result = gl.eq_principle.prompt_comparative(
             judge,
