@@ -122,7 +122,7 @@ export default function Home() {
     if (s === "FAILED") return "status fail";
     return "status";
   }, [agreement]);
-
+ return (
   <main>
   <nav className="nav shell premiumNav">
     <a className="brand" href="#">
@@ -146,7 +146,7 @@ export default function Home() {
         {networkLabel}
       </span>
 
-      <button className="btn walletBtn" onClick={connect}>
+      <button className="btn walletBtn" onClick={onConnect}>
         <WalletCards size={17} />
         {wallet ? shorten(wallet) : "Connect wallet"}
       </button>
