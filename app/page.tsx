@@ -410,7 +410,18 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="shell footer"><a className="brand" href="#"><img className="logoImg" src="/fulseta-logo.svg" alt="Fulseta"/><span>FULSETA</span></a><span>Built for the GenLayer Hackathon · 2026</span><a href="https://genlayer.com" target="_blank"><Github size={16}/> GenLayer</a></footer>
+            <footer className="shell footer">
+        <a className="brand" href="#">
+          <img className="logoImg" src="/fulseta-logo.svg" alt="Fulseta" />
+          <span>FULSETA</span>
+        </a>
+
+        <span>Built for the GenLayer Hackathon · 2026</span>
+
+        <a href="https://genlayer.com" target="_blank" rel="noreferrer">
+          <Github size={16} /> GenLayer
+        </a>
+      </footer>
     </main>
   );
 }
