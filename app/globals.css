@@ -619,3 +619,244 @@
     gap: 14px;
   }
 }
+
+/* =========================================================
+   FULSETA PREMIUM POLISH
+   Header contrast + unified application interface
+   ========================================================= */
+
+/* ---------- HEADER ---------- */
+
+.premiumNav {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.07) !important;
+  backdrop-filter: blur(18px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+}
+
+.premiumNav .brand,
+.premiumNav .brand span {
+  color: #0a0a0b !important;
+  opacity: 1 !important;
+}
+
+.navLinks a {
+  color: #20232a !important;
+  opacity: 1 !important;
+  font-weight: 650 !important;
+}
+
+.navLinks a:hover {
+  color: #0878f5 !important;
+  opacity: 1 !important;
+}
+
+.premiumNav .network {
+  color: #5f6774 !important;
+}
+
+.premiumNav .network i {
+  background: #18b96b !important;
+  box-shadow: 0 0 0 5px rgba(24, 185, 107, 0.10) !important;
+}
+
+.walletBtn {
+  background: #ffffff !important;
+  color: #111318 !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+}
+
+.walletBtn svg {
+  color: #111318 !important;
+}
+
+/* ---------- APP SECTION ---------- */
+
+#app {
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f7f9fc 45%,
+      #f3f6fb 100%
+    ) !important;
+  color: #111318 !important;
+  padding-top: 95px !important;
+  padding-bottom: 120px !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+/* Keep actual app content constrained */
+
+#app > * {
+  width: min(1120px, calc(100% - 40px));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ---------- TABS ---------- */
+
+#app .tabs {
+  width: fit-content !important;
+  background: #e9edf3 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  padding: 5px !important;
+  box-shadow: none !important;
+}
+
+#app .tabs button {
+  color: #657083 !important;
+  background: transparent !important;
+  border-radius: 999px !important;
+  padding: 12px 22px !important;
+}
+
+#app .tabs button.active {
+  background: #ffffff !important;
+  color: #111318 !important;
+  box-shadow:
+    0 2px 7px rgba(15, 23, 42, 0.07),
+    0 1px 2px rgba(15, 23, 42, 0.05) !important;
+}
+
+/* ---------- MAIN WORKSPACE ---------- */
+
+#app .panel {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  color: #111318 !important;
+  border-radius: 28px !important;
+  padding: 34px !important;
+  box-shadow:
+    0 25px 70px rgba(41, 54, 82, 0.08),
+    0 2px 8px rgba(15, 23, 42, 0.03) !important;
+}
+
+#app .panel h2,
+#app .panel h3,
+#app .panel strong,
+#app .panel b {
+  color: #111318 !important;
+}
+
+#app .panel p,
+#app .panel small {
+  color: #6b7280 !important;
+}
+
+#app .kicker {
+  color: #0878f5 !important;
+}
+
+/* ---------- INPUTS ---------- */
+
+#app input,
+#app textarea {
+  background: #f6f8fb !important;
+  border: 1px solid #e5e9f0 !important;
+  color: #15171c !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+#app input::placeholder,
+#app textarea::placeholder {
+  color: #9aa2af !important;
+}
+
+#app input:focus,
+#app textarea:focus {
+  background: #ffffff !important;
+  border-color: #147af3 !important;
+  box-shadow: 0 0 0 4px rgba(20, 122, 243, 0.10) !important;
+}
+
+/* ---------- AGREEMENT DATA ---------- */
+
+#app .lookup,
+#app .evidence,
+#app .requirements,
+#app .meta > div,
+#app .judgeBox,
+#app .empty {
+  background: #f7f9fc !important;
+  border-color: #e6eaf0 !important;
+  color: #15171c !important;
+}
+
+#app .dealTop {
+  border-color: #e6eaf0 !important;
+}
+
+#app .status {
+  border: 0 !important;
+  background: #eef2f7 !important;
+  color: #687386 !important;
+}
+
+#app .status.pass {
+  background: #e8f8ef !important;
+  color: #14804a !important;
+}
+
+#app .status.fail {
+  background: #fff0f1 !important;
+  color: #c52c3a !important;
+}
+
+/* ---------- BUTTONS ---------- */
+
+#app .btn.primary {
+  background: linear-gradient(135deg, #0878f5, #5755f7) !important;
+  border: 0 !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 28px rgba(45, 92, 240, 0.20) !important;
+}
+
+#app .btn.ghost {
+  background: #ffffff !important;
+  border: 1px solid #dfe4eb !important;
+  color: #16191f !important;
+}
+
+/* ---------- VERDICT ---------- */
+
+#app .verdict {
+  background: #f6f8fb !important;
+  border: 1px solid #e6eaf0 !important;
+  color: #111318 !important;
+}
+
+#app .verdict.pass {
+  background: #edf9f2 !important;
+  border-color: #d4f0df !important;
+}
+
+#app .verdict.fail {
+  background: #fff2f3 !important;
+  border-color: #f5dadd !important;
+}
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 760px) {
+  .premiumNav {
+    background: rgba(255,255,255,.96) !important;
+  }
+
+  #app {
+    padding-top: 65px !important;
+  }
+
+  #app > * {
+    width: min(100% - 24px, 1120px);
+  }
+
+  #app .panel {
+    padding: 22px !important;
+    border-radius: 22px !important;
+  }
+}
