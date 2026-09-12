@@ -123,32 +123,206 @@ export default function Home() {
     return "status";
   }, [agreement]);
 
-  return (
-    <main>
-      <nav className="nav shell">
-        <a className="brand" href="#"><img className="logoImg" src="/fulseta-logo.svg" alt="Fulseta"/><span>FULSETA</span></a>
-        <div className="navRight">
-          <span className="network"><i></i>{networkLabel}</span>
-          <button className="btn ghost" onClick={onConnect}>
-            <WalletCards size={17}/>{wallet ? shorten(wallet) : "Connect wallet"}
-          </button>
-        </div>
-      </nav>
+  <main>
+  <nav className="nav shell premiumNav">
+    <a className="brand" href="#">
+      <img
+        className="logoImg"
+        src="/fulseta-logo.svg"
+        alt="Fulseta"
+      />
+      <span>FULSETA</span>
+    </a>
 
-      <section className="hero shell">
-        <div className="eyebrow"><Sparkles size={15}/> Powered by GenLayer validator consensus</div>
-        <h1>Verified work.<br/><span>Automatic payment.</span></h1>
-        <p className="lead">Fulseta turns plain-English work agreements into outcome-based escrow. Submit proof, let GenLayer validators judge it, and release payment when the job is done.</p>
+    <div className="navLinks">
+      <a href="#how">How it works</a>
+      <a href="#usecases">Use cases</a>
+      <a href="#app">Product</a>
+    </div>
+
+    <div className="navRight">
+      <span className="network">
+        <i />
+        {networkLabel}
+      </span>
+
+      <button className="btn walletBtn" onClick={connect}>
+        <WalletCards size={17} />
+        {wallet ? shorten(wallet) : "Connect wallet"}
+      </button>
+    </div>
+  </nav>
+
+  <section className="premiumHero">
+    <div className="heroGlow heroGlowOne" />
+    <div className="heroGlow heroGlowTwo" />
+    <div className="heroRibbon heroRibbonOne" />
+    <div className="heroRibbon heroRibbonTwo" />
+
+    <div className="shell premiumHeroGrid">
+      <div className="premiumHeroCopy">
+        <div className="eyebrow">
+          <Sparkles size={15} />
+          Powered by GenLayer validator consensus
+        </div>
+
+        <h1>
+          Verified work.
+          <span>Automatic payment.</span>
+        </h1>
+
+        <p className="lead">
+          Fulseta turns plain-English work agreements into outcome-based
+          escrow. Submit proof, let GenLayer validators judge it, and release
+          payment when the job is done.
+        </p>
+
         <div className="heroActions">
-          <button className="btn primary" onClick={() => {setTab("create"); document.getElementById("app")?.scrollIntoView({behavior:"smooth"});}}>Create an agreement <ArrowRight size={17}/></button>
-          <a className="btn ghost" href="#how">How it works</a>
+          <button
+            className="btn primary heroPrimary"
+            onClick={() => {
+              setTab("create");
+              document
+                .getElementById("app")
+                ?.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            Create an agreement
+            <ArrowRight size={17} />
+          </button>
+
+          <a className="btn heroSecondary" href="#how">
+            How it works
+          </a>
         </div>
+
         <div className="trustRow">
-          <span><ShieldCheck/>Consensus verified</span>
-          <span><LockKeyhole/>Escrow protected</span>
-          <span><Globe2/>Proof from the open web</span>
+          <span>
+            <ShieldCheck size={18} />
+            Consensus verified
+          </span>
+
+          <span>
+            <LockKeyhole size={18} />
+            Escrow protected
+          </span>
+
+          <span>
+            <Globe2 size={18} />
+            Proof from the open web
+          </span>
         </div>
-      </section>
+      </div>
+
+      <div className="heroProduct">
+        <div className="proofToast">
+          <div className="proofIcon">
+            <BadgeCheck size={22} />
+          </div>
+
+          <div>
+            <strong>Proof verified</strong>
+            <span>Validator consensus reached</span>
+          </div>
+
+          <ArrowRight size={17} />
+        </div>
+
+        <div className="agreementPreview">
+          <div className="previewHeader">
+            <div>
+              <span className="previewLabel">LIVE AGREEMENT</span>
+              <h3>Website design</h3>
+              <small>fulseta-demo-001</small>
+            </div>
+
+            <span className="previewStatus">
+              In progress
+            </span>
+          </div>
+
+          <div className="timeline">
+            <div className="timelineItem complete">
+              <span className="timelineDot">
+                <FileCheck2 size={15} />
+              </span>
+
+              <div>
+                <strong>Agreement created</strong>
+                <small>Terms recorded on GenLayer</small>
+              </div>
+            </div>
+
+            <div className="timelineLine active" />
+
+            <div className="timelineItem active">
+              <span className="timelineDot">
+                <ExternalLink size={14} />
+              </span>
+
+              <div>
+                <strong>Proof submitted</strong>
+                <small>Public evidence received</small>
+              </div>
+            </div>
+
+            <div className="timelineLine" />
+
+            <div className="timelineItem">
+              <span className="timelineDot" />
+
+              <div>
+                <strong>Validator review</strong>
+                <small>GenLayer consensus</small>
+              </div>
+            </div>
+
+            <div className="timelineLine" />
+
+            <div className="timelineItem">
+              <span className="timelineDot" />
+
+              <div>
+                <strong>Payment released</strong>
+                <small>Automatically settled</small>
+              </div>
+            </div>
+          </div>
+
+          <div className="previewFooter">
+            <span>Protected by Fulseta</span>
+            <span>View agreement <ArrowRight size={14} /></span>
+          </div>
+        </div>
+
+        <div className="escrowFloat">
+          <div className="escrowIcon">
+            <LockKeyhole size={19} />
+          </div>
+
+          <span>Payment secured</span>
+          <strong>0.50 GEN</strong>
+          <small>Held in escrow</small>
+        </div>
+      </div>
+    </div>
+
+    <div className="shell heroBottom">
+      <span>Built for internet-native work</span>
+
+      <div>
+        <span>Creators</span>
+        <span>Freelancers</span>
+        <span>DAOs</span>
+        <span>AI agents</span>
+      </div>
+
+      <span>
+        <Globe2 size={17} />
+        Open, verifiable and global
+      </span>
+    </div>
+  </section>
 
       <section id="app" className="appShell shell">
         <div className="tabs">
