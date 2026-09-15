@@ -185,14 +185,11 @@ export async function readAgreement(
   const client = getReadClient();
 
   const read = (functionName: string) =>
-    client.readContract({
-      address: CONTRACT_ADDRESS,
-      functionName,
-      args: [dealId],
-
-      // Read the latest accepted state.
-      stateStatus: "accepted",
-    });
+  client.readContract({
+    address: CONTRACT_ADDRESS,
+    functionName,
+    args: [dealId],
+  });
 
   const [
     status,
