@@ -5,7 +5,7 @@ import {
   isSuccessful,
 } from "genlayer-js";
 
-import { studioDev } from "genlayer-js/chains";
+import { studioDevnet } from "genlayer-js/chains";
 
 export const CONTRACT_ADDRESS = (
   process.env.NEXT_PUBLIC_FULSETA_CONTRACT ||
@@ -51,12 +51,12 @@ export async function connectWallet() {
   }
 
   const client = createClient({
-    chain: studioDev,
+    chain: studioDevnet,
     account,
     provider: window.ethereum,
   });
 
-  await client.connect("studioDev");
+  await client.connect("studioDevnet");
 
   return {
     client,
@@ -69,7 +69,7 @@ export async function connectWallet() {
  */
 export function getReadClient() {
   return createClient({
-    chain: studioDev,
+    chain: studioDevnet,
   });
 }
 
