@@ -8,7 +8,9 @@
     "start": "next start"
   },
   "dependencies": {
-    "genlayer-js": "^1.1.8",
+    "@genlayer/transaction-kit": "0.1.0-rc.2",
+    "@genlayer/transaction-kit-react": "0.1.0-rc.2",
+    "genlayer-js": "2.0.0-rc.1",
     "lucide-react": "^0.548.0",
     "next": "^16.0.0",
     "react": "^19.2.0",
