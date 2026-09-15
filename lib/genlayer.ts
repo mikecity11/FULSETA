@@ -1,16 +1,15 @@
-
 "use client";
 
-import { createClient } from "genlayer-js";
-import { testnetBradbury } from "genlayer-js/chains";
 import {
-  TransactionHashVariant,
-  TransactionStatus,
-} from "genlayer-js/types";
+  createClient,
+  isSuccessful,
+} from "genlayer-js";
+
+import { studioDev } from "genlayer-js/chains";
 
 export const CONTRACT_ADDRESS = (
   process.env.NEXT_PUBLIC_FULSETA_CONTRACT ||
-  "0x086B0f5142970aC912344fb73147653f8Aca4Df0"
+  "0x23d64537B4D488D30550E5B923887ecB6da8Fc8b"
 ) as `0x${string}`;
 
 export const DEMO_MODE =
@@ -21,33 +20,43 @@ declare global {
     ethereum?: any;
   }
 }
+
 /**
- * Connect user's browser wallet to GenLayer Bradbury Testnet.
+ * Connect the user's browser wallet to
+ * GenLayer Studio Dev / Studio Next.
  */
 export async function connectWallet() {
-  if (typeof window === "undefined" || !window.ethereum) {
+  if (
+    typeof window === "undefined" ||
+    !window.ethereum
+  ) {
     throw new Error(
       "No EIP-1193 wallet found. Install MetaMask or another compatible wallet."
     );
   }
 
-  const accounts = await window.ethereum.request({
-    method: "eth_requestAccounts",
-  });
+  const accounts =
+    await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
 
-  const account = accounts?.[0] as `0x${string}` | undefined;
+  const account = accounts?.[0] as
+    | `0x${string}`
+    | undefined;
 
   if (!account) {
-    throw new Error("Wallet connection was not approved.");
+    throw new Error(
+      "Wallet connection was not approved."
+    );
   }
 
   const client = createClient({
-   chain: testnetBradbury,
+    chain: studioDev,
     account,
     provider: window.ethereum,
   });
 
- await client.connect("testnetBradbury");
+  await client.connect("studioDev");
 
   return {
     client,
@@ -56,54 +65,72 @@ export async function connectWallet() {
 }
 
 /**
- * Read-only GenLayer client.
+ * Read-only client for Studio Dev.
  */
 export function getReadClient() {
   return createClient({
-  chain: testnetBradbury,
-});
+    chain: studioDev,
+  });
 }
 
 /**
- * Send a transaction to the deployed Fulseta Intelligent Contract.
+ * Send a fee-enabled transaction to
+ * the FULSETA Intelligent Contract.
  */
 async function write(
   functionName: string,
-  args: any[],
-  value?: bigint
+  args: any[]
 ) {
   const { client } = await connectWallet();
 
-  const call: any = {
+  const call = {
     address: CONTRACT_ADDRESS,
     functionName,
     args,
   };
 
-  if (value !== undefined) {
-    call.value = value;
-  }
+  /**
+   * Consensus v0.6 requires a fee estimate
+   * for state-changing transactions.
+   */
+  const estimate =
+    await client.estimateTransactionFeesForWrite(
+      call
+    );
 
-  const hash = await client.writeContract(call);
+  const hash = await client.writeContract({
+    ...call,
 
-  const receipt = await client.waitForTransactionReceipt({
-  hash,
-  status: TransactionStatus.ACCEPTED,
-});
-    
-  if (receipt.txExecutionResultName !== "FINISHED_WITH_RETURN") {
+    fees: {
+      distribution: estimate.distribution,
+      feeValue: estimate.feeValue,
+    },
+  });
+
+  /**
+   * Wait until GenLayer has finalized
+   * the transaction.
+   */
+  const transaction =
+    await client.waitForFinalization({
+      hash,
+    });
+
+  if (!isSuccessful(transaction)) {
     throw new Error(
       `GenLayer transaction failed: ${
-        receipt.statusName || "unknown status"
+        transaction.statusName ||
+        "unknown status"
       } / ${
-        receipt.txExecutionResultName || "unknown result"
+        transaction.txExecutionResultName ||
+        "unknown result"
       }`
     );
   }
 
   return {
     hash,
-    receipt,
+    receipt: transaction,
   };
 }
 
@@ -126,34 +153,7 @@ export const createAgreement = (
   ]);
 
 /**
- * Fund an existing agreement with GEN.
- */
-export const fundAgreement = (
-  dealId: string,
-  genAmount: string
-) => {
-  const numericAmount = Number(genAmount);
-
-  if (
-    !Number.isFinite(numericAmount) ||
-    numericAmount <= 0
-  ) {
-    throw new Error("Enter a valid GEN amount.");
-  }
-
-  const value = BigInt(
-    Math.round(numericAmount * 1_000_000)
-  ) * BigInt(1_000_000_000_000);
-
-  return write(
-    "fund_agreement",
-    [dealId],
-    value
-  );
-};
-
-/**
- * Submit public evidence URL for completed work.
+ * Submit a public evidence URL.
  */
 export const submitEvidence = (
   dealId: string,
@@ -165,7 +165,8 @@ export const submitEvidence = (
   ]);
 
 /**
- * Ask GenLayer validators to evaluate the submitted work.
+ * Ask GenLayer validators to evaluate
+ * the submitted evidence.
  */
 export const evaluateWork = (
   dealId: string
@@ -175,19 +176,12 @@ export const evaluateWork = (
   ]);
 
 /**
- * Refund a failed agreement.
+ * Read an agreement from the
+ * FULSETA Intelligent Contract.
  */
-export const refundFailed = (
+export async function readAgreement(
   dealId: string
-) =>
-  write("refund_failed", [
-    dealId,
-  ]);
-
-/**
- * Read an agreement from the Intelligent Contract.
- */
-export async function readAgreement(dealId: string) {
+) {
   const client = getReadClient();
 
   const read = (functionName: string) =>
@@ -195,8 +189,9 @@ export async function readAgreement(dealId: string) {
       address: CONTRACT_ADDRESS,
       functionName,
       args: [dealId],
-      transactionHashVariant:
-        TransactionHashVariant.LATEST_NONFINAL,
+
+      // Read the latest accepted state.
+      stateStatus: "accepted",
     });
 
   const [
@@ -206,7 +201,6 @@ export async function readAgreement(dealId: string) {
     evidenceUrl,
     verdict,
     reasoning,
-    amount,
   ] = await Promise.all([
     read("get_status"),
     read("get_task"),
@@ -214,7 +208,6 @@ export async function readAgreement(dealId: string) {
     read("get_evidence"),
     read("get_verdict"),
     read("get_reasoning"),
-    read("get_amount"),
   ]);
 
   return {
@@ -226,6 +219,5 @@ export async function readAgreement(dealId: string) {
     status,
     verdict,
     reasoning,
-    amount_wei: String(amount),
   };
 }
