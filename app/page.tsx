@@ -959,6 +959,15 @@ export default function Home() {
         )}
       </section>
 
+      <section className="upcomingFeature shell" aria-labelledby="upcoming-title">
+        <div className="upcomingBadge">COMING SOON</div>
+        <div>
+          <h2 id="upcoming-title">Verified work. Automatic payment.</h2>
+          <p>We plan to introduce locked payments on FULSETA. Clients will be able to lock payment when an agreement is created, with funds released automatically once GenLayer verifies that the work meets the agreed requirements.</p>
+          <small>Upcoming feature — payment locking and automatic release are not available yet.</small>
+        </div>
+      </section>
+
       <section
         id="how"
         className="how shell"
