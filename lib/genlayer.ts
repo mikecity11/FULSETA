@@ -1,16 +1,11 @@
-
 "use client";
 
-import { createClient } from "genlayer-js";
-import { testnetBradbury } from "genlayer-js/chains";
-import {
-  TransactionHashVariant,
-  TransactionStatus,
-} from "genlayer-js/types";
+import { createClient, isSuccessful } from "genlayer-js";
+import { studioDevnet } from "genlayer-js/chains";
 
 export const CONTRACT_ADDRESS = (
   process.env.NEXT_PUBLIC_FULSETA_CONTRACT ||
-  "0x086B0f5142970aC912344fb73147653f8Aca4Df0"
+  "0x23d64537B4D488D30550E5B923887ecB6da8Fc8b"
 ) as `0x${string}`;
 
 export const DEMO_MODE =
@@ -21,9 +16,7 @@ declare global {
     ethereum?: any;
   }
 }
-/**
- * Connect user's browser wallet to GenLayer Bradbury Testnet.
- */
+
 export async function connectWallet() {
   if (typeof window === "undefined" || !window.ethereum) {
     throw new Error(
@@ -42,80 +35,70 @@ export async function connectWallet() {
   }
 
   const client = createClient({
-   chain: testnetBradbury,
+    chain: studioDevnet,
     account,
     provider: window.ethereum,
   });
 
- await client.connect("testnetBradbury");
+  await client.connect("studioDevnet");
 
-  return {
-    client,
-    account,
-  };
+  return { client, account };
 }
 
-/**
- * Read-only GenLayer client.
- */
 export function getReadClient() {
-  return createClient({
-  chain: testnetBradbury,
-});
+  return createClient({ chain: studioDevnet });
 }
 
-/**
- * Send a transaction to the deployed Fulseta Intelligent Contract.
- */
-async function write(
-  functionName: string,
-  args: any[],
-  value?: bigint
-) {
+async function write(functionName: string, args: any[]) {
   const { client } = await connectWallet();
 
-  const call: any = {
+  const call = {
     address: CONTRACT_ADDRESS,
     functionName,
     args,
   };
 
-  if (value !== undefined) {
-    call.value = value;
-  }
+  // Use deterministic fee estimation so Studio Next receives a non-zero fee
+  // without simulating the concrete contract write on every click.
+  const estimate = await client.estimateTransactionFees({
+    leaderTimeunitsAllocation: BigInt(125),
+    validatorTimeunitsAllocation: BigInt(250),
+    executionBudgetPerRound: BigInt(786500),
+    totalMessageFees: BigInt(0),
+    appealRounds: BigInt(1),
+    rotations: [BigInt(1), BigInt(1)],
+  } as any);
 
-  const hash = await client.writeContract(call);
+  const hash = await client.writeContract({
+    ...call,
+    fees: {
+      distribution: estimate.distribution,
+      feeValue: estimate.feeValue,
+    },
+  } as any);
 
-  const receipt = await client.waitForTransactionReceipt({
-  hash,
-  status: TransactionStatus.ACCEPTED,
-});
-    
-  if (receipt.txExecutionResultName !== "FINISHED_WITH_RETURN") {
+  const transaction = await client.waitForFinalization({ hash });
+
+  if (!isSuccessful(transaction)) {
     throw new Error(
       `GenLayer transaction failed: ${
-        receipt.statusName || "unknown status"
+        transaction.statusName || "unknown status"
       } / ${
-        receipt.txExecutionResultName || "unknown result"
+        transaction.txExecutionResultName || "unknown result"
       }`
     );
   }
 
-  return {
-    hash,
-    receipt,
-  };
+  return { hash, receipt: transaction };
 }
 
-/**
- * Create a new work agreement.
- */
 export const createAgreement = (
   dealId: string,
   worker: string,
   task: string,
   requirements: string,
-  deadline: string
+  deadline: string,
+  amount: string
 ) =>
   write("create_agreement", [
     dealId,
@@ -123,70 +106,15 @@ export const createAgreement = (
     task,
     requirements,
     deadline,
+    amount,
   ]);
 
-/**
- * Fund an existing agreement with GEN.
- */
-export const fundAgreement = (
-  dealId: string,
-  genAmount: string
-) => {
-  const numericAmount = Number(genAmount);
+export const submitEvidence = (dealId: string, url: string) =>
+  write("submit_evidence", [dealId, url]);
 
-  if (
-    !Number.isFinite(numericAmount) ||
-    numericAmount <= 0
-  ) {
-    throw new Error("Enter a valid GEN amount.");
-  }
+export const evaluateWork = (dealId: string) =>
+  write("evaluate_work", [dealId]);
 
-  const value = BigInt(
-    Math.round(numericAmount * 1_000_000)
-  ) * BigInt(1_000_000_000_000);
-
-  return write(
-    "fund_agreement",
-    [dealId],
-    value
-  );
-};
-
-/**
- * Submit public evidence URL for completed work.
- */
-export const submitEvidence = (
-  dealId: string,
-  url: string
-) =>
-  write("submit_evidence", [
-    dealId,
-    url,
-  ]);
-
-/**
- * Ask GenLayer validators to evaluate the submitted work.
- */
-export const evaluateWork = (
-  dealId: string
-) =>
-  write("evaluate_work", [
-    dealId,
-  ]);
-
-/**
- * Refund a failed agreement.
- */
-export const refundFailed = (
-  dealId: string
-) =>
-  write("refund_failed", [
-    dealId,
-  ]);
-
-/**
- * Read an agreement from the Intelligent Contract.
- */
 export async function readAgreement(dealId: string) {
   const client = getReadClient();
 
@@ -195,8 +123,6 @@ export async function readAgreement(dealId: string) {
       address: CONTRACT_ADDRESS,
       functionName,
       args: [dealId],
-      transactionHashVariant:
-        TransactionHashVariant.LATEST_NONFINAL,
     });
 
   const [
@@ -226,6 +152,6 @@ export async function readAgreement(dealId: string) {
     status,
     verdict,
     reasoning,
-    amount_wei: String(amount),
+    amount,
   };
 }
