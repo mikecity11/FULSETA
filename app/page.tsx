@@ -812,6 +812,14 @@ export default function Home() {
                     {agreement.requirements}
                   </p>
                 </div>
+                
+                <div className="requirements">
+                  <small>AGREED PAYMENT</small>
+
+                  <p>{agreement.amount}</p>
+
+                  <small>Settlement pending verified completion</small>
+                </div>
 
                 {!agreement.evidence_url && (
                   <div className="evidence">
