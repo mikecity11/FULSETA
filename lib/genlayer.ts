@@ -93,15 +93,22 @@ export const createAgreement = (
   requirements: string,
   deadline: string,
   amount: string
-) =>
-  write("create_agreement", [
+) => {
+  const normalizedAmount = amount.trim();
+
+  if (!/^\d+$/.test(normalizedAmount)) {
+    throw new Error("Agreed payment must be a whole number of GEN.");
+  }
+
+  return write("create_agreement", [
     dealId,
     worker,
     task,
     requirements,
     deadline,
-    amount,
+    BigInt(normalizedAmount),
   ]);
+};
 
 export const submitEvidence = (dealId: string, url: string) =>
   write("submit_evidence", [dealId, url]);
