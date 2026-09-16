@@ -142,7 +142,8 @@ export const createAgreement = (
   worker: string,
   task: string,
   requirements: string,
-  deadline: string
+  deadline: string,
+  amount: string
 ) =>
   write("create_agreement", [
     dealId,
@@ -150,6 +151,7 @@ export const createAgreement = (
     task,
     requirements,
     deadline,
+    amount,
   ]);
 
 /**
