@@ -223,7 +223,7 @@ export default function Home() {
 
     if (
       !/^\d+$/.test(cleanAmount) ||
-      BigInt(cleanAmount) <= 0n
+      BigInt(cleanAmount) <= BigInt(0)
     ) {
       setToast({
         kind: "err",
