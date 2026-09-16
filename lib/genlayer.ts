@@ -58,16 +58,7 @@ async function write(functionName: string, args: any[]) {
     args,
   };
 
-  const estimate = await client.estimateTransactionFeesForWrite(call);
-
-  const hash = await client.writeContract({
-    ...call,
-    fees: {
-      distribution: estimate.distribution,
-      feeValue: estimate.feeValue,
-    },
-  });
-
+  const hash = await client.writeContract(call as any);
   const transaction = await client.waitForFinalization({ hash });
 
   if (!isSuccessful(transaction)) {
