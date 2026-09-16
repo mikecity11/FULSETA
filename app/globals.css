@@ -915,3 +915,17 @@
   .upcomingFeature { flex-direction: column; gap: 16px; padding: 24px; margin-top: 36px; }
   .upcomingFeature h2 { font-size: 25px; }
 }
+
+.heroUpcoming {
+  margin-top: 24px;
+  max-width: 510px;
+  padding: 16px 18px;
+  border: 1px solid #dbe5fa;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f3f7ff, #faf7ff);
+  color: #15171c;
+}
+.heroUpcoming .upcomingBadge { display: inline-block; padding: 6px 9px; font-size: 10px; }
+.heroUpcoming strong { display: block; margin-top: 10px; font-size: 16px; line-height: 1.4; }
+.heroUpcoming p { margin: 6px 0 0; color: #475569; font-size: 13px; line-height: 1.6; }
+@media (max-width: 960px) { .heroUpcoming { margin-inline: auto; } }
