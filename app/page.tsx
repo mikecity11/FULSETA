@@ -30,18 +30,52 @@ type Toast =
   | { kind: "ok" | "err"; text: string }
   | null;
 
+type Agreement = {
+  exists?: boolean;
+  deal_id?: string;
+  task?: string;
+  requirements?: string;
+  evidence_url?: string;
+  status?: string;
+  verdict?: string;
+  reasoning?: string;
+  amount?: string | number | bigint;
+};
+
 const shorten = (x: string) =>
   x ? `${x.slice(0, 6)}…${x.slice(-4)}` : "";
+
+function displayAmount(
+  value: Agreement["amount"]
+): string {
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
+    return "Not specified";
+  }
+
+  const text = String(value);
+
+  if (text.toUpperCase().includes("GEN")) {
+    return text;
+  }
+
+  return `${text} GEN`;
+}
 
 export default function Home() {
   const [wallet, setWallet] = useState("");
   const [busy, setBusy] = useState("");
   const [toast, setToast] = useState<Toast>(null);
+
   const [tab, setTab] =
     useState<"create" | "verify">("create");
 
-  const [dealId, setDealId] =
-    useState("fulseta-studio-001");
+  const [dealId, setDealId] = useState(
+    "fulseta-studio-002"
+  );
 
   const [worker, setWorker] = useState("");
 
@@ -49,23 +83,27 @@ export default function Home() {
     "Publish a public webpage explaining FULSETA."
   );
 
-  const [requirements, setRequirements] =
-    useState(
-      "The webpage must be publicly accessible and clearly explain FULSETA."
-    );
+  const [requirements, setRequirements] = useState(
+    "The webpage must be publicly accessible and clearly explain FULSETA."
+  );
 
   const [deadline, setDeadline] =
     useState("2026-09-20");
-  
-  const [amount, setAmount] = useState("10 GEN");
+
+  /*
+   * Store only the numeric value in state.
+   * The UI displays GEN separately.
+   */
+  const [amount, setAmount] = useState("10");
 
   const [evidence, setEvidence] = useState("");
 
-  const [lookupId, setLookupId] =
-    useState("fulseta-studio-001");
+  const [lookupId, setLookupId] = useState(
+    "fulseta-studio-002"
+  );
 
   const [agreement, setAgreement] =
-    useState<any>(null);
+    useState<Agreement | null>(null);
 
   const networkLabel = CONTRACT_ADDRESS
     ? "GenLayer Studio Next"
@@ -95,6 +133,8 @@ export default function Home() {
           e?.message ||
           "Something went wrong.",
       });
+
+      return null;
     } finally {
       setBusy("");
     }
@@ -102,16 +142,23 @@ export default function Home() {
 
   async function onConnect() {
     if (!CONTRACT_ADDRESS && DEMO_MODE) {
-      setWallet(
-        "0x8713b5d277CA1c0eA9f31A23DD4f1eE5"
-      );
+      const demoWallet =
+        "0x8713b5d277CA1c0eA9f31A23DD4f1eE5";
+
+      setWallet(demoWallet);
+
+      if (!worker) {
+        setWorker(demoWallet);
+      }
 
       setToast({
         kind: "ok",
         text: "Demo wallet connected.",
       });
 
-      return;
+      return {
+        account: demoWallet,
+      };
     }
 
     const result = await run(
@@ -127,29 +174,79 @@ export default function Home() {
         setWorker(result.account);
       }
     }
+
+    return result;
   }
 
   async function createDeal() {
-    if (!worker) {
-      return setToast({
-        kind: "err",
-        text: "Add the worker wallet address.",
-      });
-    }
-
     if (!dealId.trim()) {
-      return setToast({
+      setToast({
         kind: "err",
         text: "Enter a Deal ID.",
       });
+      return;
     }
 
-    if (!wallet) {
-      await onConnect();
+    if (!worker.trim()) {
+      setToast({
+        kind: "err",
+        text: "Add the worker wallet address.",
+      });
+      return;
+    }
+
+    if (!task.trim()) {
+      setToast({
+        kind: "err",
+        text: "Describe the task.",
+      });
+      return;
+    }
+
+    if (!requirements.trim()) {
+      setToast({
+        kind: "err",
+        text: "Add the success requirements.",
+      });
+      return;
+    }
+
+    if (!deadline) {
+      setToast({
+        kind: "err",
+        text: "Choose a deadline.",
+      });
+      return;
+    }
+
+    const cleanAmount = amount.trim();
+
+    if (
+      !/^\d+$/.test(cleanAmount) ||
+      BigInt(cleanAmount) <= 0n
+    ) {
+      setToast({
+        kind: "err",
+        text:
+          "Enter a whole-number agreed payment greater than 0.",
+      });
+      return;
+    }
+
+    let connectedWallet = wallet;
+
+    if (!connectedWallet) {
+      const connection = await onConnect();
+
+      if (!connection?.account) {
+        return;
+      }
+
+      connectedWallet = connection.account;
     }
 
     if (!CONTRACT_ADDRESS && DEMO_MODE) {
-      const mock = {
+      const mock: Agreement = {
         exists: true,
         deal_id: dealId,
         task,
@@ -158,6 +255,7 @@ export default function Home() {
         status: "CREATED",
         verdict: "",
         reasoning: "",
+        amount: cleanAmount,
       };
 
       localStorage.setItem(
@@ -166,14 +264,13 @@ export default function Home() {
       );
 
       setAgreement(mock);
+      setLookupId(dealId);
+      setTab("verify");
 
       setToast({
         kind: "ok",
         text: "Demo agreement created.",
       });
-
-      setLookupId(dealId);
-      setTab("verify");
 
       return;
     }
@@ -187,23 +284,25 @@ export default function Home() {
           task,
           requirements,
           deadline,
-          amount
+          cleanAmount
         ),
       "Agreement created on GenLayer Studio Next."
     );
 
     if (result) {
       setLookupId(dealId);
+      setAgreement(null);
       setTab("verify");
     }
   }
 
   async function loadAgreement() {
     if (!lookupId.trim()) {
-      return setToast({
+      setToast({
         kind: "err",
         text: "Enter a Deal ID.",
       });
+      return;
     }
 
     if (!CONTRACT_ADDRESS && DEMO_MODE) {
@@ -212,13 +311,21 @@ export default function Home() {
       );
 
       if (!raw) {
-        return setToast({
+        setToast({
           kind: "err",
-          text: "No demo agreement found with that ID.",
+          text:
+            "No demo agreement found with that ID.",
         });
+        return;
       }
 
       setAgreement(JSON.parse(raw));
+
+      setToast({
+        kind: "ok",
+        text: "Agreement loaded.",
+      });
+
       return;
     }
 
@@ -234,17 +341,32 @@ export default function Home() {
   }
 
   async function submit() {
-    if (!agreement) return;
+    if (!agreement) {
+      return;
+    }
 
     if (!evidence.trim()) {
-      return setToast({
+      setToast({
         kind: "err",
         text: "Enter a public evidence URL.",
       });
+      return;
+    }
+
+    if (
+      !evidence.startsWith("https://") &&
+      !evidence.startsWith("http://")
+    ) {
+      setToast({
+        kind: "err",
+        text:
+          "Evidence must be a public http or https URL.",
+      });
+      return;
     }
 
     if (!CONTRACT_ADDRESS && DEMO_MODE) {
-      const next = {
+      const next: Agreement = {
         ...agreement,
         evidence_url: evidence,
         status: "EVIDENCE_SUBMITTED",
@@ -270,7 +392,7 @@ export default function Home() {
       () =>
         submitEvidence(
           lookupId,
-          evidence
+          evidence.trim()
         ),
       "Evidence submitted for GenLayer consensus review."
     );
@@ -281,7 +403,9 @@ export default function Home() {
   }
 
   async function judge() {
-    if (!agreement) return;
+    if (!agreement) {
+      return;
+    }
 
     if (!CONTRACT_ADDRESS && DEMO_MODE) {
       setBusy("judge");
@@ -290,7 +414,7 @@ export default function Home() {
         setTimeout(resolve, 1400)
       );
 
-      const next = {
+      const next: Agreement = {
         ...agreement,
         status: "COMPLETED",
         verdict: "PASS",
@@ -338,6 +462,14 @@ export default function Home() {
 
     return "status";
   }, [agreement]);
+
+  const paymentMessage =
+    agreement?.status === "COMPLETED" &&
+    agreement?.verdict === "PASS"
+      ? `${displayAmount(
+          agreement.amount
+        )} eligible for settlement`
+      : "Settlement pending verified completion";
 
   return (
     <main>
@@ -406,10 +538,9 @@ export default function Home() {
             <p className="lead">
               FULSETA turns plain-English work
               agreements into verifiable outcomes.
-              Submit proof and let GenLayer
-              validators independently evaluate
-              whether the agreed work was
-              completed.
+              Submit proof and let GenLayer validators
+              independently evaluate whether the
+              agreed work was completed.
             </p>
 
             <div className="heroActions">
@@ -481,7 +612,7 @@ export default function Home() {
                   <h3>Website delivery</h3>
 
                   <small>
-                    fulseta-studio-001
+                    fulseta-studio-002
                   </small>
                 </div>
 
@@ -632,11 +763,11 @@ export default function Home() {
                 <h2>Define the outcome</h2>
 
                 <p>
-                  Describe the job and the
-                  conditions that must be met.
+                  Describe the job, agreed payment
+                  and conditions that must be met.
                   GenLayer will later evaluate
-                  submitted evidence against
-                  these requirements.
+                  submitted evidence against these
+                  requirements.
                 </p>
               </div>
 
@@ -652,7 +783,7 @@ export default function Home() {
                   onChange={(e) =>
                     setDealId(e.target.value)
                   }
-                  placeholder="fulseta-studio-001"
+                  placeholder="fulseta-studio-002"
                 />
               </label>
 
@@ -706,19 +837,30 @@ export default function Home() {
                     setDeadline(e.target.value)
                   }
                 />
+              </label>
+
               <label>
-                <label>
-                <span>Agreed payment</span>
+                <span>Agreed payment (GEN)</span>
 
                 <input
-                  type="text"
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputMode="numeric"
                   value={amount}
                   onChange={(e) =>
                     setAmount(e.target.value)
                   }
-                  placeholder="e.g. 10 GEN"
-                 />
+                  placeholder="10"
+                />
+
+                <small>
+                  Recorded with the agreement.
+                  Settlement follows verified
+                  completion.
+                </small>
               </label>
+            </div>
 
             <button
               className="btn primary full"
@@ -736,14 +878,16 @@ export default function Home() {
 
               Create agreement
             </button>
+          </div>
         ) : (
           <div className="panel">
             <div className="lookup">
               <input
                 value={lookupId}
-                onChange={(e) =>
-                  setLookupId(e.target.value)
-                }
+                onChange={(e) => {
+                  setLookupId(e.target.value);
+                  setAgreement(null);
+                }}
                 placeholder="Enter deal ID"
               />
 
@@ -770,10 +914,9 @@ export default function Home() {
                 <h3>Load an agreement</h3>
 
                 <p>
-                  Review its requirements,
-                  submit public evidence, then
-                  ask GenLayer validators for
-                  a verdict.
+                  Review its requirements, submit
+                  public evidence, then ask GenLayer
+                  validators for a verdict.
                 </p>
               </div>
             ) : (
@@ -782,11 +925,13 @@ export default function Home() {
                   <div>
                     <span className="kicker">
                       AGREEMENT{" "}
-                      {agreement.deal_id}
+                      {agreement.deal_id ||
+                        lookupId}
                     </span>
 
                     <h2>
-                      {agreement.task}
+                      {agreement.task ||
+                        "Work agreement"}
                     </h2>
                   </div>
 
@@ -796,7 +941,7 @@ export default function Home() {
                     {agreement.status?.replaceAll(
                       "_",
                       " "
-                    )}
+                    ) || "UNKNOWN"}
                   </span>
                 </div>
 
@@ -806,16 +951,25 @@ export default function Home() {
                   </small>
 
                   <p>
-                    {agreement.requirements}
+                    {agreement.requirements ||
+                      "No requirements returned."}
                   </p>
                 </div>
-                
+
                 <div className="requirements">
-                  <small>AGREED PAYMENT</small>
+                  <small>
+                    AGREED PAYMENT
+                  </small>
 
-                  <p>{agreement.amount}</p>
+                  <p>
+                    {displayAmount(
+                      agreement.amount
+                    )}
+                  </p>
 
-                  <small>Settlement pending verified completion</small>
+                  <small>
+                    {paymentMessage}
+                  </small>
                 </div>
 
                 {!agreement.evidence_url && (
@@ -856,7 +1010,7 @@ export default function Home() {
                     "COMPLETED",
                     "FAILED",
                   ].includes(
-                    agreement.status
+                    agreement.status || ""
                   ) && (
                     <div className="judgeBox">
                       <div>
@@ -922,13 +1076,27 @@ export default function Home() {
                       </h3>
 
                       <p>
-                        {agreement.reasoning}
+                        {agreement.reasoning ||
+                          "No reasoning returned."}
                       </p>
+
+                      {agreement.verdict ===
+                        "PASS" && (
+                        <small>
+                          Work verified —{" "}
+                          {displayAmount(
+                            agreement.amount
+                          )}{" "}
+                          eligible for settlement.
+                        </small>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
-        
+            )}
+          </div>
+        )}
       </section>
 
       <section
@@ -940,8 +1108,8 @@ export default function Home() {
         </span>
 
         <h2>
-          From agreement to verified outcome
-          in four steps.
+          From agreement to verified outcome in
+          four steps.
         </h2>
 
         <div className="steps">
@@ -950,8 +1118,9 @@ export default function Home() {
             <BriefcaseBusiness />
             <h3>Define the job</h3>
             <p>
-              Set the task, deadline and clear
-              success requirements.
+              Set the task, deadline, agreed
+              payment and clear success
+              requirements.
             </p>
           </article>
 
