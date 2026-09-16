@@ -706,7 +706,20 @@ export default function Home() {
                     setDeadline(e.target.value)
                   }
                 />
-              </label>
+              <label>
+                <label>
+                <span>Agreed payment</span>
+
+                <input
+                  type="text"
+                  value={amount}
+                  onChange={(e) =>
+                    setAmount(e.target.value)
+                  }
+                  placeholder="e.g. 10 GEN"
+                 />
+               </label>
+              
             </div>
 
             <button
