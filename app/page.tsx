@@ -681,7 +681,7 @@ export default function Home() {
                 <h2>Define the outcome</h2>
 
                 <p>
-                  Describe the job, agreed payment
+                  Describe the job
                   and conditions that must be met.
                   GenLayer will later evaluate
                   submitted evidence against these
@@ -947,11 +947,7 @@ export default function Home() {
                       {agreement.verdict ===
                         "PASS" && (
                         <small>
-                          Work verified —{" "}
-                          {displayAmount(
-                            agreement.amount
-                          )}{" "}
-                          eligible for settlement.
+                          Work verified by GenLayer validator consensus.
                         </small>
                       )}
                     </div>
@@ -982,8 +978,7 @@ export default function Home() {
             <BriefcaseBusiness />
             <h3>Define the job</h3>
             <p>
-              Set the task, deadline, agreed
-              payment and clear success
+              Set the task and clear success
               requirements.
             </p>
           </article>
