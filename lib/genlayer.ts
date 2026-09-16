@@ -97,7 +97,7 @@ export const createAgreement = (
     task,
     requirements,
     deadline,
-    BigInt(amount),
+    amount,
   ]);
 
 export const submitEvidence = (dealId: string, url: string) =>
