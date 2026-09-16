@@ -49,6 +49,8 @@ async function write(functionName: string, args: any[]) {
     args,
   };
 
+  // Use BigInt() constructors rather than bigint literals so the project
+  // remains compatible with the current TypeScript target used by Vercel.
   const estimate = await client.estimateTransactionFees({
     leaderTimeunitsAllocation: BigInt(300),
     validatorTimeunitsAllocation: BigInt(300),
