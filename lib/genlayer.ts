@@ -9,7 +9,7 @@ import { studioDevnet } from "genlayer-js/chains";
 
 export const CONTRACT_ADDRESS = (
   process.env.NEXT_PUBLIC_FULSETA_CONTRACT ||
-  "0x23d64537B4D488D30550E5B923887ecB6da8Fc8b"
+  "0x848B6463113C4920799027686027D3C6BD93C3e8"
 ) as `0x${string}`;
 
 export const DEMO_MODE =
