@@ -58,16 +58,10 @@ async function write(functionName: string, args: any[]) {
     args,
   };
 
-  // Use deterministic fee estimation so Studio Next receives a non-zero fee
-  // without simulating the concrete contract write on every click.
-  const estimate = await client.estimateTransactionFees({
-    leaderTimeunitsAllocation: BigInt(125),
-    validatorTimeunitsAllocation: BigInt(250),
-    executionBudgetPerRound: BigInt(786500),
-    totalMessageFees: BigInt(0),
-    appealRounds: BigInt(1),
-    rotations: [BigInt(1), BigInt(1)],
-  } as any);
+  // Studio Next / Consensus v0.6 requires the fee distribution and feeValue
+  // to be estimated for the actual write. This avoids stale hard-coded budgets
+  // that can revert with BudgetTooLow when the network policy changes.
+  const estimate = await client.estimateTransactionFeesForWrite(call as any);
 
   const hash = await client.writeContract({
     ...call,
