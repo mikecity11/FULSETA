@@ -200,6 +200,7 @@ export async function readAgreement(
     evidenceUrl,
     verdict,
     reasoning,
+    amount,
   ] = await Promise.all([
     read("get_status"),
     read("get_task"),
@@ -207,7 +208,8 @@ export async function readAgreement(
     read("get_evidence"),
     read("get_verdict"),
     read("get_reasoning"),
-  ]);
+    read("get_amount"),
+    ]);
 
   return {
     exists: Boolean(status),
@@ -218,5 +220,6 @@ export async function readAgreement(
     status,
     verdict,
     reasoning,
+    amount,
   };
 }
