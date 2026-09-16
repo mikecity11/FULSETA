@@ -92,20 +92,9 @@ async function write(functionName: string, args: any[]) {
 
 export const createAgreement = (
   dealId: string,
-  worker: string,
   task: string,
-  requirements: string,
-  deadline: string,
-  amount: string
-) =>
-  write("create_agreement", [
-    dealId,
-    worker,
-    task,
-    requirements,
-    deadline,
-    amount,
-  ]);
+  requirements: string
+) => write("create_agreement", [dealId, task, requirements]);
 
 export const submitEvidence = (dealId: string, url: string) =>
   write("submit_evidence", [dealId, url]);
@@ -130,7 +119,6 @@ export async function readAgreement(dealId: string) {
     evidenceUrl,
     verdict,
     reasoning,
-    amount,
   ] = await Promise.all([
     read("get_status"),
     read("get_task"),
@@ -138,7 +126,6 @@ export async function readAgreement(dealId: string) {
     read("get_evidence"),
     read("get_verdict"),
     read("get_reasoning"),
-    read("get_amount"),
   ]);
 
   return {
@@ -150,6 +137,5 @@ export async function readAgreement(dealId: string) {
     status,
     verdict,
     reasoning,
-    amount,
   };
 }
