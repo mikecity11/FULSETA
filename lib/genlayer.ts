@@ -19,20 +19,12 @@ declare global {
 
 export async function connectWallet() {
   if (typeof window === "undefined" || !window.ethereum) {
-    throw new Error(
-      "No EIP-1193 wallet found. Install MetaMask or another compatible wallet."
-    );
+    throw new Error("No EIP-1193 wallet found. Install MetaMask or another compatible wallet.");
   }
 
-  const accounts = await window.ethereum.request({
-    method: "eth_requestAccounts",
-  });
-
+  const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
   const account = accounts?.[0] as `0x${string}` | undefined;
-
-  if (!account) {
-    throw new Error("Wallet connection was not approved.");
-  }
+  if (!account) throw new Error("Wallet connection was not approved.");
 
   const client = createClient({
     chain: studioDevnet,
@@ -41,7 +33,6 @@ export async function connectWallet() {
   });
 
   await client.connect("studioDevnet");
-
   return { client, account };
 }
 
@@ -58,10 +49,17 @@ async function write(functionName: string, args: any[]) {
     args,
   };
 
-  // Studio Next / Consensus v0.6 requires the fee distribution and feeValue
-  // to be estimated for the actual write. This avoids stale hard-coded budgets
-  // that can revert with BudgetTooLow when the network policy changes.
-  const estimate = await client.estimateTransactionFeesForWrite(call as any);
+  // The Studio-dev simulation helper currently fails on this deployed contract
+  // before it can return a fee recommendation. Quote a conservative developer
+  // preset from the live Studio-dev fee policy instead, then submit that quote.
+  const estimate = await client.estimateTransactionFees({
+    leaderTimeunitsAllocation: 300n,
+    validatorTimeunitsAllocation: 300n,
+    executionBudgetPerRound: 1_000_000_000_000_000_000n,
+    totalMessageFees: 0n,
+    appealRounds: 0n,
+    rotations: [2n],
+  });
 
   const hash = await client.writeContract({
     ...call,
@@ -75,11 +73,7 @@ async function write(functionName: string, args: any[]) {
 
   if (!isSuccessful(transaction)) {
     throw new Error(
-      `GenLayer transaction failed: ${
-        transaction.statusName || "unknown status"
-      } / ${
-        transaction.txExecutionResultName || "unknown result"
-      }`
+      `GenLayer transaction failed: ${transaction.statusName || "unknown status"} / ${transaction.txExecutionResultName || "unknown result"}`
     );
   }
 
@@ -95,7 +89,6 @@ export const createAgreement = (
   amount: string
 ) => {
   const normalizedAmount = amount.trim();
-
   if (!/^\d+$/.test(normalizedAmount)) {
     throw new Error("Agreed payment must be a whole number of GEN.");
   }
@@ -118,7 +111,6 @@ export const evaluateWork = (dealId: string) =>
 
 export async function readAgreement(dealId: string) {
   const client = getReadClient();
-
   const read = (functionName: string) =>
     client.readContract({
       address: CONTRACT_ADDRESS,
@@ -126,23 +118,16 @@ export async function readAgreement(dealId: string) {
       args: [dealId],
     });
 
-  const [
-    status,
-    task,
-    requirements,
-    evidenceUrl,
-    verdict,
-    reasoning,
-    amount,
-  ] = await Promise.all([
-    read("get_status"),
-    read("get_task"),
-    read("get_requirements"),
-    read("get_evidence"),
-    read("get_verdict"),
-    read("get_reasoning"),
-    read("get_amount"),
-  ]);
+  const [status, task, requirements, evidenceUrl, verdict, reasoning, amount] =
+    await Promise.all([
+      read("get_status"),
+      read("get_task"),
+      read("get_requirements"),
+      read("get_evidence"),
+      read("get_verdict"),
+      read("get_reasoning"),
+      read("get_amount"),
+    ]);
 
   return {
     exists: Boolean(status),
