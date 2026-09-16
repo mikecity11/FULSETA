@@ -58,7 +58,25 @@ async function write(functionName: string, args: any[]) {
     args,
   };
 
-  const hash = await client.writeContract(call as any);
+  // Use deterministic fee estimation so Studio Next receives a non-zero fee
+  // without simulating the concrete contract write on every click.
+  const estimate = await client.estimateTransactionFees({
+    leaderTimeunitsAllocation: BigInt(125),
+    validatorTimeunitsAllocation: BigInt(250),
+    executionBudgetPerRound: BigInt(786500),
+    totalMessageFees: BigInt(0),
+    appealRounds: BigInt(1),
+    rotations: [BigInt(1), BigInt(1)],
+  } as any);
+
+  const hash = await client.writeContract({
+    ...call,
+    fees: {
+      distribution: estimate.distribution,
+      feeValue: estimate.feeValue,
+    },
+  } as any);
+
   const transaction = await client.waitForFinalization({ hash });
 
   if (!isSuccessful(transaction)) {
