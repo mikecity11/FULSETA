@@ -57,12 +57,11 @@ async function write(functionName: string, args: any[]) {
     args,
   };
 
-  // Use deterministic fee estimation so Studio Next receives a non-zero fee
-  // without simulating the concrete contract write on every click.
+  // Let the SDK derive the execution budget from the current network fee policy.
+  // A fixed execution budget can fall below Studio Dev's required minimum.
   const estimate = await client.estimateTransactionFees({
     leaderTimeunitsAllocation: BigInt(125),
     validatorTimeunitsAllocation: BigInt(250),
-    executionBudgetPerRound: BigInt(786500),
     totalMessageFees: BigInt(0),
     appealRounds: BigInt(1),
     rotations: [BigInt(1), BigInt(1)],
