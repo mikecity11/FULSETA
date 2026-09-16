@@ -39,31 +39,10 @@ type Agreement = {
   status?: string;
   verdict?: string;
   reasoning?: string;
-  amount?: string | number | bigint;
 };
 
 const shorten = (x: string) =>
   x ? `${x.slice(0, 6)}…${x.slice(-4)}` : "";
-
-function displayAmount(
-  value: Agreement["amount"]
-): string {
-  if (
-    value === undefined ||
-    value === null ||
-    value === ""
-  ) {
-    return "Not specified";
-  }
-
-  const text = String(value);
-
-  if (text.toUpperCase().includes("GEN")) {
-    return text;
-  }
-
-  return `${text} GEN`;
-}
 
 export default function Home() {
   const [wallet, setWallet] = useState("");
@@ -77,7 +56,6 @@ export default function Home() {
     "fulseta-studio-002"
   );
 
-  const [worker, setWorker] = useState("");
 
   const [task, setTask] = useState(
     "Publish a public webpage explaining FULSETA."
@@ -86,15 +64,6 @@ export default function Home() {
   const [requirements, setRequirements] = useState(
     "The webpage must be publicly accessible and clearly explain FULSETA."
   );
-
-  const [deadline, setDeadline] =
-    useState("2026-09-20");
-
-  /*
-   * Store only the numeric value in state.
-   * The UI displays GEN separately.
-   */
-  const [amount, setAmount] = useState("10");
 
   const [evidence, setEvidence] = useState("");
 
@@ -147,9 +116,6 @@ export default function Home() {
 
       setWallet(demoWallet);
 
-      if (!worker) {
-        setWorker(demoWallet);
-      }
 
       setToast({
         kind: "ok",
@@ -170,9 +136,6 @@ export default function Home() {
     if (result?.account) {
       setWallet(result.account);
 
-      if (!worker) {
-        setWorker(result.account);
-      }
     }
 
     return result;
@@ -187,13 +150,6 @@ export default function Home() {
       return;
     }
 
-    if (!worker.trim()) {
-      setToast({
-        kind: "err",
-        text: "Add the worker wallet address.",
-      });
-      return;
-    }
 
     if (!task.trim()) {
       setToast({
@@ -207,28 +163,6 @@ export default function Home() {
       setToast({
         kind: "err",
         text: "Add the success requirements.",
-      });
-      return;
-    }
-
-    if (!deadline) {
-      setToast({
-        kind: "err",
-        text: "Choose a deadline.",
-      });
-      return;
-    }
-
-    const cleanAmount = amount.trim();
-
-    if (
-      !/^\d+$/.test(cleanAmount) ||
-      BigInt(cleanAmount) <= BigInt(0)
-    ) {
-      setToast({
-        kind: "err",
-        text:
-          "Enter a whole-number agreed payment greater than 0.",
       });
       return;
     }
@@ -255,7 +189,6 @@ export default function Home() {
         status: "CREATED",
         verdict: "",
         reasoning: "",
-        amount: cleanAmount,
       };
 
       localStorage.setItem(
@@ -278,14 +211,7 @@ export default function Home() {
     const result = await run(
       "create",
       () =>
-        createAgreement(
-          dealId,
-          worker,
-          task,
-          requirements,
-          deadline,
-          cleanAmount
-        ),
+        createAgreement(dealId, task, requirements),
       "Agreement created on GenLayer Studio Next."
     );
 
@@ -463,14 +389,6 @@ export default function Home() {
     return "status";
   }, [agreement]);
 
-  const paymentMessage =
-    agreement?.status === "COMPLETED" &&
-    agreement?.verdict === "PASS"
-      ? `${displayAmount(
-          agreement.amount
-        )} eligible for settlement`
-      : "Settlement pending verified completion";
-
   return (
     <main>
       <nav className="nav shell premiumNav">
@@ -532,7 +450,7 @@ export default function Home() {
 
             <h1>
               Verified work.
-              <span>Payment unlocked.</span>
+              <span>Outcome confirmed.</span>
             </h1>
 
             <p className="lead">
@@ -787,17 +705,7 @@ export default function Home() {
                 />
               </label>
 
-              <label>
-                <span>Worker wallet</span>
 
-                <input
-                  value={worker}
-                  onChange={(e) =>
-                    setWorker(e.target.value)
-                  }
-                  placeholder="0x..."
-                />
-              </label>
 
               <label className="wide">
                 <span>Task</span>
@@ -827,39 +735,9 @@ export default function Home() {
                 />
               </label>
 
-              <label>
-                <span>Deadline</span>
 
-                <input
-                  type="date"
-                  value={deadline}
-                  onChange={(e) =>
-                    setDeadline(e.target.value)
-                  }
-                />
-              </label>
 
-              <label>
-                <span>Agreed payment (GEN)</span>
 
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  inputMode="numeric"
-                  value={amount}
-                  onChange={(e) =>
-                    setAmount(e.target.value)
-                  }
-                  placeholder="10"
-                />
-
-                <small>
-                  Recorded with the agreement.
-                  Settlement follows verified
-                  completion.
-                </small>
-              </label>
             </div>
 
             <button
@@ -956,21 +834,7 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div className="requirements">
-                  <small>
-                    AGREED PAYMENT
-                  </small>
 
-                  <p>
-                    {displayAmount(
-                      agreement.amount
-                    )}
-                  </p>
-
-                  <small>
-                    {paymentMessage}
-                  </small>
-                </div>
 
                 {!agreement.evidence_url && (
                   <div className="evidence">
