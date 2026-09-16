@@ -461,6 +461,12 @@ export default function Home() {
               agreed work was completed.
             </p>
 
+            <div className="heroUpcoming">
+              <span className="upcomingBadge">COMING SOON</span>
+              <strong>Lock payment. Verify work. Release automatically.</strong>
+              <p>Planned for FULSETA: payment locked when an agreement is created and released automatically after work verification.</p>
+            </div>
+
             <div className="heroActions">
               <button
                 className="btn primary heroPrimary"
