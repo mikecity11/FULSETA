@@ -718,9 +718,7 @@ export default function Home() {
                   }
                   placeholder="e.g. 10 GEN"
                  />
-               </label>
-              
-            </div>
+              </label>
 
             <button
               className="btn primary full"
