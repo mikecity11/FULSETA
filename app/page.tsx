@@ -56,6 +56,8 @@ export default function Home() {
 
   const [deadline, setDeadline] =
     useState("2026-09-20");
+  
+  const [amount, setAmount] = useState("10 GEN");
 
   const [evidence, setEvidence] = useState("");
 
@@ -185,6 +187,7 @@ export default function Home() {
           task,
           requirements,
           deadline
+          amount
         ),
       "Agreement created on GenLayer Studio Next."
     );
