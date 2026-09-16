@@ -1,15 +1,11 @@
 "use client";
 
-import {
-  createClient,
-  isSuccessful,
-} from "genlayer-js";
-
+import { createClient, isSuccessful } from "genlayer-js";
 import { studioDevnet } from "genlayer-js/chains";
 
 export const CONTRACT_ADDRESS = (
   process.env.NEXT_PUBLIC_FULSETA_CONTRACT ||
-  "0x848B6463113C4920799027686027D3C6BD93C3e8"
+  "0x23d64537B4D488D30550E5B923887ecB6da8Fc8b"
 ) as `0x${string}`;
 
 export const DEMO_MODE =
@@ -21,33 +17,21 @@ declare global {
   }
 }
 
-/**
- * Connect the user's browser wallet to
- * GenLayer Studio Dev / Studio Next.
- */
 export async function connectWallet() {
-  if (
-    typeof window === "undefined" ||
-    !window.ethereum
-  ) {
+  if (typeof window === "undefined" || !window.ethereum) {
     throw new Error(
       "No EIP-1193 wallet found. Install MetaMask or another compatible wallet."
     );
   }
 
-  const accounts =
-    await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
+  const accounts = await window.ethereum.request({
+    method: "eth_requestAccounts",
+  });
 
-  const account = accounts?.[0] as
-    | `0x${string}`
-    | undefined;
+  const account = accounts?.[0] as `0x${string}` | undefined;
 
   if (!account) {
-    throw new Error(
-      "Wallet connection was not approved."
-    );
+    throw new Error("Wallet connection was not approved.");
   }
 
   const client = createClient({
@@ -58,29 +42,14 @@ export async function connectWallet() {
 
   await client.connect("studioDevnet");
 
-  return {
-    client,
-    account,
-  };
+  return { client, account };
 }
 
-/**
- * Read-only client for Studio Dev.
- */
 export function getReadClient() {
-  return createClient({
-    chain: studioDevnet,
-  });
+  return createClient({ chain: studioDevnet });
 }
 
-/**
- * Send a fee-enabled transaction to
- * the FULSETA Intelligent Contract.
- */
-async function write(
-  functionName: string,
-  args: any[]
-) {
+async function write(functionName: string, args: any[]) {
   const { client } = await connectWallet();
 
   const call = {
@@ -89,54 +58,31 @@ async function write(
     args,
   };
 
-  /**
-   * Consensus v0.6 requires a fee estimate
-   * for state-changing transactions.
-   */
-  const estimate =
-    await client.estimateTransactionFeesForWrite(
-      call
-    );
+  const estimate = await client.estimateTransactionFeesForWrite(call);
 
   const hash = await client.writeContract({
     ...call,
-
     fees: {
       distribution: estimate.distribution,
       feeValue: estimate.feeValue,
     },
   });
 
-  /**
-   * Wait until GenLayer has finalized
-   * the transaction.
-   */
-  const transaction =
-    await client.waitForFinalization({
-      hash,
-    });
+  const transaction = await client.waitForFinalization({ hash });
 
   if (!isSuccessful(transaction)) {
     throw new Error(
       `GenLayer transaction failed: ${
-        transaction.statusName ||
-        "unknown status"
+        transaction.statusName || "unknown status"
       } / ${
-        transaction.txExecutionResultName ||
-        "unknown result"
+        transaction.txExecutionResultName || "unknown result"
       }`
     );
   }
 
-  return {
-    hash,
-    receipt: transaction,
-  };
+  return { hash, receipt: transaction };
 }
 
-/**
- * Create a new work agreement.
- */
 export const createAgreement = (
   dealId: string,
   worker: string,
@@ -151,47 +97,24 @@ export const createAgreement = (
     task,
     requirements,
     deadline,
-    amount,
+    BigInt(amount),
   ]);
 
-/**
- * Submit a public evidence URL.
- */
-export const submitEvidence = (
-  dealId: string,
-  url: string
-) =>
-  write("submit_evidence", [
-    dealId,
-    url,
-  ]);
+export const submitEvidence = (dealId: string, url: string) =>
+  write("submit_evidence", [dealId, url]);
 
-/**
- * Ask GenLayer validators to evaluate
- * the submitted evidence.
- */
-export const evaluateWork = (
-  dealId: string
-) =>
-  write("evaluate_work", [
-    dealId,
-  ]);
+export const evaluateWork = (dealId: string) =>
+  write("evaluate_work", [dealId]);
 
-/**
- * Read an agreement from the
- * FULSETA Intelligent Contract.
- */
-export async function readAgreement(
-  dealId: string
-) {
+export async function readAgreement(dealId: string) {
   const client = getReadClient();
 
   const read = (functionName: string) =>
-  client.readContract({
-    address: CONTRACT_ADDRESS,
-    functionName,
-    args: [dealId],
-  });
+    client.readContract({
+      address: CONTRACT_ADDRESS,
+      functionName,
+      args: [dealId],
+    });
 
   const [
     status,
@@ -209,7 +132,7 @@ export async function readAgreement(
     read("get_verdict"),
     read("get_reasoning"),
     read("get_amount"),
-    ]);
+  ]);
 
   return {
     exists: Boolean(status),
