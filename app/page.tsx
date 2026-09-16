@@ -736,7 +736,6 @@ export default function Home() {
 
               Create agreement
             </button>
-          </div>
         ) : (
           <div className="panel">
             <div className="lookup">
