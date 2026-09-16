@@ -186,7 +186,7 @@ export default function Home() {
           worker,
           task,
           requirements,
-          deadline
+          deadline,
           amount
         ),
       "Agreement created on GenLayer Studio Next."
