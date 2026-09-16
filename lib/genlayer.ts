@@ -49,16 +49,13 @@ async function write(functionName: string, args: any[]) {
     args,
   };
 
-  // The Studio-dev simulation helper currently fails on this deployed contract
-  // before it can return a fee recommendation. Quote a conservative developer
-  // preset from the live Studio-dev fee policy instead, then submit that quote.
   const estimate = await client.estimateTransactionFees({
-    leaderTimeunitsAllocation: 300n,
-    validatorTimeunitsAllocation: 300n,
-    executionBudgetPerRound: 1_000_000_000_000_000_000n,
-    totalMessageFees: 0n,
-    appealRounds: 0n,
-    rotations: [2n],
+    leaderTimeunitsAllocation: BigInt(300),
+    validatorTimeunitsAllocation: BigInt(300),
+    executionBudgetPerRound: BigInt("1000000000000000000"),
+    totalMessageFees: BigInt(0),
+    appealRounds: BigInt(0),
+    rotations: [BigInt(2)],
   });
 
   const hash = await client.writeContract({
