@@ -44,6 +44,39 @@ type Agreement = {
 const shorten = (x: string) =>
   x ? `${x.slice(0, 6)}…${x.slice(-4)}` : "";
 
+const FINAL_STATUSES = new Set(["COMPLETED", "FAILED"]);
+const CONSENSUS_POLL_INTERVAL_MS = 4000;
+const CONSENSUS_POLL_ATTEMPTS = 90;
+
+const sleep = (milliseconds: number) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function waitForConsensusResult(dealId: string) {
+  let latest: Agreement | null = null;
+
+  for (
+    let attempt = 0;
+    attempt < CONSENSUS_POLL_ATTEMPTS;
+    attempt += 1
+  ) {
+    try {
+      const result = await readAgreement(dealId);
+      latest = result as unknown as Agreement;
+
+      if (FINAL_STATUSES.has(latest?.status || "")) {
+        return latest;
+      }
+    } catch {
+      // Studio RPC reads can fail briefly while a transaction is finalizing.
+      // Keep polling so a temporary read error is not shown as a failed verdict.
+    }
+
+    await sleep(CONSENSUS_POLL_INTERVAL_MS);
+  }
+
+  return latest;
+}
+
 export default function Home() {
   const [wallet, setWallet] = useState("");
   const [busy, setBusy] = useState("");
@@ -364,14 +397,66 @@ export default function Home() {
       return;
     }
 
-    const result = await run(
-      "judge",
-      () => evaluateWork(lookupId),
-      "GenLayer consensus completed."
-    );
+    setBusy("judge");
+    setToast(null);
 
-    if (result) {
-      await loadAgreement();
+    let finalizationWarning = "";
+
+    try {
+      await evaluateWork(lookupId);
+    } catch (e: any) {
+      finalizationWarning =
+        e?.message || "The finalization response timed out.";
+
+      setBusy("reconcile");
+      setToast({
+        kind: "ok",
+        text:
+          "Consensus was submitted. Confirming the finalized on-chain result…",
+      });
+    }
+
+    try {
+      const refreshed = await waitForConsensusResult(
+        lookupId
+      );
+
+      if (
+        refreshed &&
+        FINAL_STATUSES.has(refreshed.status || "")
+      ) {
+        setAgreement(refreshed);
+        setToast({
+          kind: "ok",
+          text: `GenLayer consensus finalized: ${
+            refreshed.verdict || refreshed.status
+          }.`,
+        });
+        return;
+      }
+
+      if (refreshed) {
+        setAgreement({
+          ...refreshed,
+          status: "FINALIZING",
+        });
+      }
+
+      setToast({
+        kind: "err",
+        text:
+          "The transaction is still finalizing. Use Load agreement to refresh its result; do not run consensus again yet.",
+      });
+    } catch (e: any) {
+      setToast({
+        kind: "err",
+        text:
+          finalizationWarning ||
+          e?.message ||
+          "Unable to confirm the finalized consensus result.",
+      });
+    } finally {
+      setBusy("");
     }
   }
 
@@ -876,12 +961,8 @@ export default function Home() {
                 )}
 
                 {agreement.evidence_url &&
-                  ![
-                    "COMPLETED",
-                    "FAILED",
-                  ].includes(
-                    agreement.status || ""
-                  ) && (
+                  agreement.status ===
+                    "EVIDENCE_SUBMITTED" && (
                     <div className="judgeBox">
                       <div>
                         <WandSparkles />
@@ -905,13 +986,18 @@ export default function Home() {
                         onClick={judge}
                         disabled={!!busy}
                       >
-                        {busy === "judge" ? (
+                        {[
+                          "judge",
+                          "reconcile",
+                        ].includes(busy) ? (
                           <>
                             <Loader2
                               className="spin"
                               size={17}
                             />
-                            Validators judging…
+                            {busy === "reconcile"
+                              ? "Confirming result…"
+                              : "Validators judging…"}
                           </>
                         ) : (
                           <>
